@@ -1,0 +1,133 @@
+Gabi Levit 207612417
+Omer Aley-Raz
+
+------------------- Part 2 -------------------
+
+
+The methods we chose for the diagrams are the following:
+
+(1) addAnswerToData()
+This is a method that is accessible via the main manu by selecting option 2 after selecting a subject.
+The function of this option is to add a new answer to the selected subjects' database so it can be added to a question at a later time.
+
+In the diagrams file, the first diagram is the one related to this option, named "addAnswerToData()". It shows the method call from the main tho the intermediate object UserInteraction and inside it you can see the calls for entering a new answer and after that' the logic to check if the answer was succsessfully inserted or if the answer already exists in the database.
+
+
+(2) showData()
+This is a method that is accessible via the main manu by selecting option 1 after selecting a subject.
+The function of this option is to print the entire subjects' data, which contains all of the question that were made for this subject, alogn with the question type, the questions' answers, and in case the question is a closed one, it shows the truth value of each answer.
+
+In the diagrams file, the second diagram is the one related to this option, named "showData()". It shows the method call from the main tho the intermediate object UserInteraction and inside it you can see the calls for the logic that check if there are any questions, and if so then it calls for a loop that prints all the questions and checking their instance for proper printing.
+
+
+Below the sequence diagram you can find the class diagram for the methods. Since these 2 methods require almost all of the projects' classes (all of them except the ones who are exam related), we decided to complete the diagram and present it as a whole.
+
+
+
+
+CHANGES:
+
+-Added class ToTextFile and interface Printable and moved the print function to them so ManualExam and AutomaticExam will comply with the SOLID princaple.
+-Moved manual exam creation function from main to ManualExam to make main comply with SOLID principle #1.
+-To improve Mains' coplience with SOLID principle #1 and to solve a few errors we encountered while moving the manual exam creation function, which was dependent on a few other functions from main, we introduced an intermediate layer that includes all of the functions that were previously in main, UserInteraction, that is soley responsible for connecting between the user input and the inner classes of the project.
+
+
+
+
+
+------------------- Part 1 -------------------
+
+Collections used:
+	*HashSet
+	*LinkedHashSet
+	*ArrayList
+
+Explanation:
+	*HashSet - Used in Repository.questionsDB:
+		Before the change the original array was type Question[], we have changed it to HashSet because the order of the questions presented was'nt important.
+		Because the Object Question had a static field id, int type that was unique and we could use this field by finding in complexity of O(1) the instance,
+		and also the question collection didn't need to be sorted so HashSet was the best option.
+		Location in code: Repository.java, Line: 11.
+	
+	*LinkedHashSet - Used in Repository.answersTextDB:
+		Before the change the original array was type AnswerText[], we picked the LinkedHashSet collection because only one reason.
+		Which is this collection saves order by insertion, and we need the order because the set of answers is shown to the user by order of insertion,
+		and the user need to pick by giving an index of the answer that want to add, (also we didn't add to the AnswerText class a static id like in Question.
+		Location in code: Repository.java, Line: 12.
+		
+	*ArrayList	- Used in SubjectRepository.subjetsDB, ClosedQuestion.answers, Automatic test
+		SubjectRepository.subjetsDB - Before the change the original array was type Subject[], we picked ArrayList because we needed an indexed based collection,
+		that can iterate threw indexes to the collection because the user picks an index. Also the order by insertion is important, although ArrayList allow duplication,
+		we prevented duplication manually.
+		Location in code: SubjectRepository.java, Line: 10.
+		
+		ClosedQuestion.answers - Before the change the original array was type Answer[], we did this collection with ArrayList because the order of insertion was important,
+		the answers were shown by orders to an closed question so that the user can pick using index based and correct answer, although ArrayList allow duplication,
+		we prevented duplication manually.
+		Location in code: ClosedQuestion.java, Line: 7.
+
+Generic's usage: In file AnswerText.java
+Explanation: We change the AnswerText class to a generic class AnswerText<T>, with a private field private T text, because the text of the answer can be a generic field,
+			 it can be String or Integer or another class. the text field can be any kind that's why we choose this class to be generic.
+			 		
+All changes history in the project:
+	Files: 
+		*AnswerText.java - we have changed the whole class to a generic class with a generic field and we override the HashCode and Equals methods 
+		                   for using the HashSet collection
+		
+		*AutomaticExam.java - we have removed the method returnNumberOfRealAnswers because it wasn't relevant anymore because of our new changes,
+							  we have changed the method createExam to work with ArrayList instead of a regular array, because we know beforehand the amount Lines 42-92.
+		
+		*ClosedQuestion.java - we replaced the field Answer[] answers to the new field ArrayList<Answer> answers (Explanation above why) Line 7
+		                       we change in the ctor to the new collection Line 9-12
+		                       we changed the return type of getAnswers() Lines 14-16
+		                       we changed the method addAnswer(Answer answer) using the ArrayList logic Lines 18-25
+		                       we changed the method isExistAnswer(Answer answer) using the ArrayList logic Lines 27-33
+		                       we changed the method getAnswer(int id) using the ArrayList logic Lines 35-40
+		                       we changed the method deleteAnswer(Answer answer) using the ArrayList logic Lines 42-44
+		                       we have removed the method moveTheOtherAnswersOneSpotLeft because now we are using the ArrayList which is handling that already
+		                       we have changed the method printAnswersList (for cosmetic purpose only) Lines 46-57
+							  
+		*Main.java - we have changed the method createExam(), we changed the validation checking using the HashSet for better complexity and a bit logic change Lines 228-333
+				     we changed addTwoHardCodedAnswersToQuestion(Question newQuestion) for bug fixes only Lines 352-375
+				     we changed addAnswerToData(), we converted the logic using LinkedHashSet Lines 574-590			
+					 we removed the method showData(Question[] questions) because it wasn't relevant anymore
+					 
+	    *Question.java - we have override the HashCode and Equals methods for using the HashSet collection
+	    
+	    *Repository.java - we replaced the field Question[] questionsDB to the new field HashSet<Question> questionsDB Line 10
+	                       and the field AnswerText[] answersTextDB to the new field LinkedHashSet<AnswerText> answersTextDB (Explanation above why) Line 11
+	                       we have changed the getQuestionsDB() method using the HashSet logic Lines 18-20
+	                       we have changed the getAnswersText() method using the LinkedHashSet logic Lines 26-28
+	                       we have changed the getAnswer(int id) method using the LinkedHashSet logic and iterator Lines 34-44
+	                       we have removed the findAnswer(int id) method because it wasn't relevant anymore 
+	                       we have changed the getQuestion(int id) method using the HashSet logic Lines 46-48
+	                       we have changed the findQuestion(int id) minor changes Lines 50-54
+	                       we have removed isAnswerExistInStock(String answerText) method because it wasn't relevant anymore
+	                       we have changed the isQuestionExistInStock(String questionText) using the HashSet logic Lines 56-58
+	                       we have changed the addQuestionToStock(Question question) using the HashSet logic Lines 60-67
+	                       we have changed initializeCounter() method for bug fixes Lines 69-76
+	                       we have changed returnNumberOfRealAnswers(ClosedQuestion closedQuestion) method using the LinkedHashSet logic Lines 78-80
+	                       we have changed addAnswerToStock(String answer) method using the LinkedHashSet logic Lines 82-84
+	                       we have changed addAnswerToSpesificQuestion(Answer answer, int selectedQuestion) method by not using indexes and for loops Lines 86-90
+	                       we have changed deleteQuestionFromStock(Question question) method using the HashSet logic Lines 92-94
+	                       we have removed moveTheOtherQuestionsOneSpotLeft(int deletedIndex) because now we are using the HashSet which is handling that already
+	                       we have changed toStringAnswersInStock() by changing from for loops to using iterator for logic of LinkedHashSet Lines 96-105 
+	                       we have changed toStringQuestionsInStock() by changing from for loops to using iterator for logic of HashSet Lines 107-124
+                           we have changed toString() by changing from for loops to using iterator Lines 126-146
+                           we have changed toStringSolution() by changing from for loops to using iterator (but with the solution also) Lines 148-169
+	
+	    *Subject.java - we have changed the getter getQuestionsDB() method using the HashSet logic Lines 33-35
+	                	we have changed the getter getAnswersText() method using the LinkedHashSet logic Lines 37-39
+	
+		*SubjectRepository.java - we replaced the field Subject[] subjectsDB to the new field ArrayList<Subject> subjectsArrayList Line 10
+		                          we have changed the getter getSubjects() method using the ArrayList logic Lines 16-18
+		                          we have changed the getter getSubject() method using the ArrayList logic Lines 24-26
+		                          we have changed the getter addSubject(Subject subject) method using the ArrayList logic Lines 28-30
+		                          we have changed the getter findSubject(int id) method using the ArrayList logic Lines 32-40
+		                          we have changed the getter isSubjectExistInStock(String subjectName) method using the ArrayList logic Lines 42-50
+		                          we have changed the getter deleteSubject(Subject subject) method using the ArrayList logic Lines 52-54
+		                          we have removed moveTheOtherSubjectsOneSpotLeft(int deletedIndex) because now we are using the ArrayList which is handling that already
+	
+User interface: because we didn't had any addition bugs to our program, no need to give instructions on how to use the program because there is a understandable menu.			   
+			
