@@ -3,5 +3,5 @@ import java.io.IOException;
 public interface Printable {
 	void print(Repository rep, String type) throws IOException;
 	void kaki(int kaka);
-
+	void gabi(int gabi); //why this shit no work
 }
