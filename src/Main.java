@@ -24,7 +24,7 @@ public class Main {
 	}
 
 	private static void subjectMenu(UserInteraction user)
-			throws FileNotFoundException, IOException, InputMismatchException, ClassNotFoundException {
+            throws FileNotFoundException, IOException, InputMismatchException, ClassNotFoundException, SQLException {
 		
 		int value = -1;
 		MenuActionCompleteListener m = new MenuActionCompleteListener();

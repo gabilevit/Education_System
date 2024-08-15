@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -7,6 +8,7 @@ public class SubjectRepository implements Serializable {
 
 	private ArrayList<Subject> subjectsArrayList;
 	private static SubjectRepository instance;
+	Database db = new Database();
 
 	public SubjectRepository() {
 		subjectsArrayList = new ArrayList<>();
@@ -31,8 +33,11 @@ public class SubjectRepository implements Serializable {
 		return this.subjectsArrayList.get(id - 1);
 	}
 
-	public void addSubject(Subject subject) {
+	public void addSubject(Subject subject, Database db) throws SQLException {
 		this.subjectsArrayList.add(subject);
+		db.startConnection();
+		db.insertToSubjectTable(subject.getName());
+		db.closeConnection();
 	}
 
 	public boolean findSubject(int id) {

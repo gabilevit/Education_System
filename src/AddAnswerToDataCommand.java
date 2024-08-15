@@ -13,7 +13,7 @@ public class AddAnswerToDataCommand implements Command{
 	}
 	
 	@Override
-	public void execute() {
+	public void execute() throws SQLException {
 		user.addAnswerToData();
 	}
 

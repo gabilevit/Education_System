@@ -1,3 +1,5 @@
+import java.sql.SQLException;
+
 public interface Command {
-	void execute();
+	void execute() throws SQLException;
 }

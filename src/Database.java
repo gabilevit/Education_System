@@ -1,6 +1,9 @@
+import org.w3c.dom.CDATASection;
+
 import java.sql.*;
 
 public class Database {
+    private static Database instance;
     private static final String URL = "jdbc:postgresql://localhost:5432/Education";
     private static final String USER = "postgres";
     private static final String PASSWORD = "190299";
@@ -9,9 +12,16 @@ public class Database {
     public ResultSet rs;
 
 
-    public void Database() throws SQLException { //constructor
+    private void Database() throws SQLException { //constructor
         //startConnection(); //start connection with the database
         //pullDatabase(); //checks if database is not null. if null builds an empty database with ready tables.
+    }
+
+    public static Database getInstance() {
+        if (instance == null) {
+            instance = new Database();
+        }
+        return instance;
     }
 
     public void createTables() throws SQLException {
@@ -62,9 +72,7 @@ public class Database {
                 query.append("AdapterAnswerID SERIAL PRIMARY KEY,\n");
                 query.append("IsCorrect BOOLEAN NOT NULL,\n");
                 query.append("AnswerTextID INT NOT NULL,\n");
-                query.append("QuestionID INT NOT NULL,\n");
-                query.append("FOREIGN KEY (AnswerTextID) REFERENCES AnswerText(AnswerTextID),\n");
-                query.append("FOREIGN KEY (QuestionID) REFERENCES Question(QuestionID)\n");
+                query.append("FOREIGN KEY (AnswerTextID) REFERENCES AnswerText(AnswerTextID)\n");
                 query.append(");");
                 break;
             case "AdapterAnswer_ClosedQuestion":
@@ -113,10 +121,10 @@ public class Database {
         }
     }
 
-    public boolean insertToAnswerTextTable(String answerText, int subjectID) throws SQLException {
+    public boolean insertToAnswerTextTable(String answerText, String subjectText) throws SQLException {
         try {
             stmt = con.createStatement();
-            String q = "INSERT INTO AnswerText (AnswerText, SubjectID) VALUES ('"+answerText+"', "+subjectID+");";
+            String q = "INSERT INTO AnswerText (AnswerText, SubjectID) VALUES ('"+answerText+"', "+ getSubjectID(subjectText)+");";
             stmt.executeUpdate(q.toString());
             return true;
         } catch (SQLException e) {
@@ -125,10 +133,10 @@ public class Database {
         }
     }
 
-    public boolean insertToQuestionTable(String text, String difficulty, int serialNumber, int subjectID) throws SQLException {
+    public boolean insertToQuestionTable(String text, String difficulty, int serialNumber, String subjectText) throws SQLException {
         try {
             stmt = con.createStatement();
-            String q = "INSERT INTO Question (Text, Difficulty, SerialNumber, SubjectID) VALUES ('"+text+"', '"+difficulty+"', "+serialNumber+", "+subjectID+");";
+            String q = "INSERT INTO Question (Text, Difficulty, SerialNumber, SubjectID) VALUES ('"+text+"', '"+difficulty+"', "+serialNumber+", "+ getSubjectID(subjectText)+");";
             stmt.executeUpdate(q.toString());
             return true;
         } catch (SQLException e) {
@@ -137,10 +145,10 @@ public class Database {
         }
     }
 
-    public boolean insertToOpenQuestionTable(int questionID, int answerTextID) throws SQLException {
+    public boolean insertToOpenQuestionTable(String questionText, String answerText) throws SQLException {
         try {
             stmt = con.createStatement();
-            String q = "INSERT INTO OpenQuestion (QuestionID, AnswerTextID) VALUES ("+questionID+", "+answerTextID+");";
+            String q = "INSERT INTO OpenQuestion (QuestionID, AnswerTextID) VALUES ("+ getQuestionID(questionText)+", "+getAnswerTextID(answerText)+");";
             stmt.executeUpdate(q.toString());
             return true;
         } catch (SQLException e) {
@@ -149,10 +157,10 @@ public class Database {
         }
     }
 
-    public boolean insertToClosedQuestionTable(int questionID) throws SQLException {
+    public boolean insertToClosedQuestionTable(String questionText) throws SQLException {
         try {
             stmt = con.createStatement();
-            String q = "INSERT INTO ClosedQuestion (QuestionID) VALUES ("+questionID+");";
+            String q = "INSERT INTO ClosedQuestion (QuestionID) VALUES ("+getQuestionID(questionText)+");";
             stmt.executeUpdate(q.toString());
             return true;
         } catch (SQLException e) {
@@ -161,10 +169,10 @@ public class Database {
         }
     }
 
-    public boolean insertToAdapterAnswerTable(boolean isCorrect, int answerTextID, int questionID) throws SQLException {
+    public boolean insertToAdapterAnswerTable(boolean isCorrect, String answerText) throws SQLException {
         try {
             stmt = con.createStatement();
-            String q = "INSERT INTO AdapterAnswer (IsCorrect, AnswerTextID, QuestionID) VALUES ("+isCorrect+", "+answerTextID+", "+questionID+");";
+            String q = "INSERT INTO AdapterAnswer (IsCorrect, AnswerTextID) VALUES ("+isCorrect+", "+getAnswerTextID(answerText)+");";
             stmt.executeUpdate(q.toString());
             return true;
         } catch (SQLException e) {
@@ -173,10 +181,10 @@ public class Database {
         }
     }
 
-    public boolean insertToAdapterAnswer_ClosedQuestionTable(int adapterAnswerID, int closedQID) throws SQLException {
+    public boolean insertToAdapterAnswer_ClosedQuestionTable(boolean isCorrect, String adapterAnswerText, String questionText) throws SQLException {
         try {
             stmt = con.createStatement();
-            String q = "INSERT INTO AdapterAnswer_ClosedQuestion (AdapterAnswerID, ClosedQID) VALUES ("+adapterAnswerID+", "+closedQID+");";
+            String q = "INSERT INTO AdapterAnswer_ClosedQuestion (AdapterAnswerID, ClosedQID) VALUES ("+getAdapterAnswerID(isCorrect, getAnswerTextID(adapterAnswerText))+", "+getClosedQuestionID(getQuestionID(questionText))+");";
             stmt.executeUpdate(q.toString());
             return true;
         } catch (SQLException e) {
@@ -184,4 +192,84 @@ public class Database {
             return false;
         }
     }
+
+    public int getSubjectID(String name) throws SQLException {
+        try {
+            stmt = con.createStatement();
+            String q = "SELECT SubjectID FROM Subject WHERE Name = '"+name+"';";
+            rs = stmt.executeQuery(q.toString());
+            rs.next();
+            return rs.getInt("SubjectID");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    public int getAnswerTextID(String answerText) throws SQLException {
+        try {
+            stmt = con.createStatement();
+            String q = "SELECT AnswerTextID FROM AnswerText WHERE AnswerText = '"+answerText+"';";
+            rs = stmt.executeQuery(q.toString());
+            rs.next();
+            return rs.getInt("AnswerTextID");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    public int getQuestionID(String text) throws SQLException {
+        try {
+            stmt = con.createStatement();
+            String q = "SELECT QuestionID FROM Question WHERE Text = '"+text+"';";
+            rs = stmt.executeQuery(q.toString());
+            rs.next();
+            return rs.getInt("QuestionID");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    public int getOpenQuestionID(int questionID) throws SQLException {
+        try {
+            stmt = con.createStatement();
+            String q = "SELECT OpenQID FROM OpenQuestion WHERE QuestionID = "+questionID+";";
+            rs = stmt.executeQuery(q.toString());
+            rs.next();
+            return rs.getInt("OpenQID");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    public int getClosedQuestionID(int questionID) throws SQLException {
+        try {
+            stmt = con.createStatement();
+            String q = "SELECT ClosedQID FROM ClosedQuestion WHERE QuestionID = "+questionID+";";
+            rs = stmt.executeQuery(q.toString());
+            rs.next();
+            return rs.getInt("ClosedQID");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    public int getAdapterAnswerID(boolean isCorrect, int answerTextID) throws SQLException {
+        try {
+            stmt = con.createStatement();
+            String q = "SELECT AdapterAnswerID FROM AdapterAnswer WHERE IsCorrect = "+isCorrect+" AND AnswerTextID = "+answerTextID+";";
+            rs = stmt.executeQuery(q.toString());
+            rs.next();
+            return rs.getInt("AdapterAnswerID");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+
 }

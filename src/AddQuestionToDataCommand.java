@@ -13,7 +13,7 @@ public class AddQuestionToDataCommand implements Command{
 	}
 	
 	@Override
-	public void execute() {
+	public void execute() throws SQLException {
 		user.addQuestionToData(this.qType);
 	}
 }

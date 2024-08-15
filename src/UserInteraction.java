@@ -16,7 +16,7 @@ public class UserInteraction implements Observer {
 	private Scanner input = new Scanner(System.in);
 	private int subIn = 0;
 	SubjectRepository subjectRep = SubjectRepository.getInstance();
-	Database db = new Database();
+	Database db = Database.getInstance();
 
 	public UserInteraction() throws FileNotFoundException, ClassNotFoundException, IOException, SQLException {
 		/*try {
@@ -90,7 +90,7 @@ public class UserInteraction implements Observer {
 
 	}
 
-	public void addSubjectToData() {
+	public void addSubjectToData() throws SQLException {
 		String subjectText;
 		System.out.println("Enter subject name:");
 		do {
@@ -99,7 +99,7 @@ public class UserInteraction implements Observer {
 			if (this.subjectRep.isSubjectExistInStock(subjectText))
 				System.out.println("This subject already exist in the stock");
 		} while (this.subjectRep.isSubjectExistInStock(subjectText));
-		this.subjectRep.addSubject(new Subject(subjectText));
+		this.subjectRep.addSubject(new Subject(subjectText), db);
 		System.out.println("Subject added succesfuly to stock");
 	}
 
@@ -186,7 +186,7 @@ public class UserInteraction implements Observer {
 			return false;
 	}
 
-	public void addQuestionToData(eQuestionType qType) {
+	public void addQuestionToData(eQuestionType qType) throws SQLException {
 		String questionText;
 		System.out.println("Whats the question?");
 		do {
@@ -207,14 +207,20 @@ public class UserInteraction implements Observer {
 		} while (!(qDifficulty.equals("Hard")) && !(qDifficulty.equals("Medium")) && !(qDifficulty.equals("Easy")));
 		Question question = QuestionFactory.getType(qType, questionText, eDifficulty.valueOf(qDifficulty));
 		if (question instanceof OpenQuestion) {
+			db.startConnection();
+			db.insertToQuestionTable(questionText, qDifficulty, question.getId(), getSubject().getName());
+			db.closeConnection();
 			addOpenQuestionToData((OpenQuestion) question, questionText, eDifficulty.valueOf(qDifficulty));
 		} else if (question instanceof ClosedQuestion) {
+			db.startConnection();
+			db.insertToQuestionTable(questionText, qDifficulty, question.getId(), getSubject().getName());
+			db.closeConnection();
 			addClosedQuestionToData((ClosedQuestion) question, questionText, eDifficulty.valueOf(qDifficulty));
 		}
 		System.out.println("Question added succesfuly to stock");
 	}
 
-	public void addClosedQuestionToData(ClosedQuestion closedQuestion, String questionText, eDifficulty eDifficulty) {
+	public void addClosedQuestionToData(ClosedQuestion closedQuestion, String questionText, eDifficulty eDifficulty) throws SQLException {
 		int answerKind;
 		char ch;
 		do {
@@ -235,10 +241,18 @@ public class UserInteraction implements Observer {
 					if (!(ch == 't') && !(ch == 'f'))
 						System.out.println("Wrong input!");
 				} while (!(ch == 't') && !(ch == 'f'));
-				if ((ch == 't'))
+				if ((ch == 't')){
+					db.startConnection();
+					db.insertToAdapterAnswerTable(true, answertext.toString());
+					db.closeConnection();
 					closedQuestion.addAnswer(new AdapterAnswer(answertext, true));
-				else if (((ch == 'f')))
+				}
+				else if (((ch == 'f'))){
+					db.startConnection();
+					db.insertToAdapterAnswerTable(false, answertext.toString());
+					db.closeConnection();
 					closedQuestion.addAnswer(new AdapterAnswer(answertext, false));
+				}
 			} else if (answerKind == 2) {
 				AnswerText temp = null;
 				temp = addAnswerToData();
@@ -268,9 +282,12 @@ public class UserInteraction implements Observer {
 					ch = 'c';
 				}
 		} while (ch == 'c');
+		db.startConnection();
+		db.insertToClosedQuestionTable(questionText);
+		db.closeConnection();
 	}
 
-	public void addOpenQuestionToData(OpenQuestion openQuestion, String questionText, eDifficulty eDifficulty) {
+	public void addOpenQuestionToData(OpenQuestion openQuestion, String questionText, eDifficulty eDifficulty) throws SQLException {
 		int answerKind;
 		System.out.println("If you want to add answer from stock press 1");
 		System.out.println("If you want to add a new answer by urself press 2");
@@ -295,6 +312,9 @@ public class UserInteraction implements Observer {
 		} catch (ClosedQuestionLessThen4AnswersException e) {
 			System.out.println(e.getMessage());
 		}
+		db.startConnection();
+		db.insertToOpenQuestionTable(questionText, openQuestion.getAnswer().toString());
+		db.closeConnection();
 	}
 
 	public int selectQuestionFromStock() {
@@ -353,7 +373,7 @@ public class UserInteraction implements Observer {
 		System.out.println(getSubject().getStock().toStringAnswersInStock());
 	}
 
-	public AnswerText addAnswerToData() {
+	public AnswerText addAnswerToData() throws SQLException {
 		System.out.println("Please type the answer:");
 		String answerText;
 		AnswerText temp = null;
@@ -367,6 +387,9 @@ public class UserInteraction implements Observer {
 				break;
 			}
 		}
+		db.startConnection();
+		db.insertToAnswerTextTable(answerText, getSubject().getName());
+		db.closeConnection();
 		System.out.println("Answer added succesfuly to stock");
 		return temp;
 	}
