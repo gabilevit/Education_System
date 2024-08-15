@@ -46,14 +46,14 @@ public class ManualExam implements Examable {
 			questionNumber = user.selectQuestionFromStock();
 			if (checkQ.add(questionNumber)) {
 				if (exam.getQuestion(questionNumber) instanceof ClosedQuestion) {
-					ClosedQuestion temp = new ClosedQuestion(exam.getQuestion(questionNumber).getQuestionText(),
+					Question temp = QuestionFactory.getType(eQuestionType.Closed, exam.getQuestion(questionNumber).getQuestionText(),
 							exam.getQuestion(questionNumber).getDifficulty());
-					ArrayList<Answer> answers = ((ClosedQuestion) exam.getQuestion(questionNumber)).getAnswers();
+					ArrayList<AdapterAnswer> answers = ((ClosedQuestion) exam.getQuestion(questionNumber)).getAnswers();
 					int counter = 1;
 					int decision = -1;
 					HashSet<Integer> checkA = new HashSet<Integer>(0);
 					while (decision != 0) {
-						Iterator<Answer> it = answers.iterator();
+						Iterator<AdapterAnswer> it = answers.iterator();
 						counter = 1;
 						System.out.println("Choose answer to add, 0 to finish: \n");
 						while (it.hasNext()) {
@@ -63,8 +63,8 @@ public class ManualExam implements Examable {
 						decision = input.nextInt();
 						if ((decision > 0) && (decision <= answers.size())) {
 							if (checkA.add(decision)) {
-								Answer answer = answers.get(decision - 1);
-								temp.addAnswer(answer);
+								AdapterAnswer answer = answers.get(decision - 1);
+								((ClosedQuestion) temp).addAnswer(answer);
 							} else {
 								System.out.println("Answer already in test");
 							}

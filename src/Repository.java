@@ -52,7 +52,7 @@ public class Repository implements Serializable {
 	}
 
 	public boolean isQuestionExistInStock(String questionText) {
-		return this.questionsDB.contains(new ClosedQuestion(questionText, eDifficulty.Easy));
+		return this.questionsDB.contains(QuestionFactory.getType(eQuestionType.Closed, questionText, eDifficulty.Easy));
 	}
 
 	public void addQuestionToStock(Question question) throws ClosedQuestionLessThen4AnswersException {
@@ -70,7 +70,7 @@ public class Repository implements Serializable {
 		while (it.hasNext()) {
 			max = Math.max(max, it.next().getId());
 		}
-		new ClosedQuestion("", eDifficulty.valueOf("Easy")).initializeCounter(max);
+		QuestionFactory.getType(eQuestionType.Closed, "", eDifficulty.valueOf("Easy")).initializeCounter(max);
 	}
 
 	private int returnNumberOfRealAnswers(ClosedQuestion closedQuestion) {
@@ -81,7 +81,7 @@ public class Repository implements Serializable {
 		this.answersTextDB.add(new AnswerText(answer));
 	}
 
-	public boolean addAnswerToSpesificQuestion(Answer answer, int selectedQuestion) {
+	public boolean addAnswerToSpesificQuestion(AdapterAnswer answer, int selectedQuestion) {
 		if (getQuestion(selectedQuestion) instanceof ClosedQuestion)
 			return ((ClosedQuestion) getQuestion(selectedQuestion)).addAnswer(answer);
 		return false;

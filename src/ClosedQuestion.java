@@ -2,18 +2,18 @@ import java.util.ArrayList;
 
 public class ClosedQuestion extends Question {
 
-	private ArrayList<Answer> answers;
+	private ArrayList<AdapterAnswer> answers;
 
 	public ClosedQuestion(String questionText, eDifficulty difficulty) {
 		super(questionText, difficulty);
-		this.answers = new ArrayList<Answer>(10);
+		this.answers = new ArrayList<AdapterAnswer>(10);
 	}
 
-	public ArrayList<Answer> getAnswers() {
+	public ArrayList<AdapterAnswer> getAnswers() {
 		return this.answers;
 	}
 
-	public boolean addAnswer(Answer answer) {
+	public boolean addAnswer(AdapterAnswer answer) {
 		if (!isExistAnswer(answer) && answers.size() < 10) {
 			answers.add(answer);
 		} else {
@@ -22,7 +22,7 @@ public class ClosedQuestion extends Question {
 		return false;
 	}
 
-	private boolean isExistAnswer(Answer answer) {
+	private boolean isExistAnswer(AdapterAnswer answer) {
 		for (int i = 0; i < answers.size(); i++) {
 			if (answers.contains(answer))
 				return true;
@@ -30,14 +30,14 @@ public class ClosedQuestion extends Question {
 		return false;
 	}
 
-	public Answer getAnswer(int id) {
+	public AdapterAnswer getAnswer(int id) {
 		if (id > answers.size()) {
 			return null;
 		}
 		return this.answers.get(id - 1);
 	}
 
-	public void deleteAnswer(Answer answer) {
+	public void deleteAnswer(AdapterAnswer answer) {
 		answers.remove(answer);
 	}
 

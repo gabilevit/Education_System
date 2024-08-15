@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -17,14 +18,18 @@ import java.util.Scanner;
 public class Main {
 	static Scanner input = new Scanner(System.in);
 
-	public static void main(String[] args) throws IOException, ClassNotFoundException {
-		UserInteraction user = new UserInteraction();
+	public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
+		UserInteraction user = UserInteraction.getInstance();
 		subjectMenu(user);
 	}
 
 	private static void subjectMenu(UserInteraction user)
-			throws FileNotFoundException, IOException, InputMismatchException {
+			throws FileNotFoundException, IOException, InputMismatchException, ClassNotFoundException {
+		
 		int value = -1;
+		MenuActionCompleteListener m = new MenuActionCompleteListener();
+		m.attach(user);
+		
 		do {
 
 			System.out.println("THIS IS THE MENU SUBJECT");
@@ -54,7 +59,7 @@ public class Main {
 						user.getSubject().getStock().initializeCounter();
 					}
 				}
-				mainMenu(user);
+				mainMenu(user, m);
 				break;
 			case 2:
 				user.addSubjectToData();
@@ -70,7 +75,7 @@ public class Main {
 
 	}
 
-	private static void mainMenu(UserInteraction user) throws IOException, InputMismatchException {
+	private static void mainMenu(UserInteraction user, MenuActionCompleteListener m) throws IOException, InputMismatchException, ClassNotFoundException {
 		int value = -1;
 		do {
 			try {
@@ -89,22 +94,35 @@ public class Main {
 				System.out.println("Press 0 to exit the program and save the data");
 
 				value = input.nextInt();
+				Command cmd;
 
 				switch (value) {
 				case 1:
-					user.showData();
+					cmd = new ShowDataCommand();
+					m.setActionType("Show Data");
+					cmd.execute();
+					m.complete();
 					break;
 				case 2:
-					user.addAnswerToData();
+					cmd = new AddAnswerToDataCommand();
+					m.setActionType("Add Answer");
+					cmd.execute();
+					m.complete();
 					break;
 				case 3:
 					user.addAnswerFromStockToQuestion();
 					break;
 				case 4:
-					user.addQuestionToData(4);
+					cmd = new AddQuestionToDataCommand(eQuestionType.Closed);
+					m.setActionType("Add Closed Question");
+					cmd.execute();
+					m.complete();
 					break;
 				case 5:
-					user.addQuestionToData(5);
+					cmd = new AddQuestionToDataCommand(eQuestionType.Open);
+					m.setActionType("Add Open Question");
+					cmd.execute();
+					m.complete();
 					break;
 				case 6:
 					user.deleteAnswerFromSpecificQuestion();
@@ -123,7 +141,7 @@ public class Main {
 					System.out.println("Bye bye");
 					break;
 				}
-			} catch (InputMismatchException e) {
+			} catch (InputMismatchException | SQLException e) {
 				System.out.println("INPUT MISMATCH, ABORTING...");
 				input.next();
 			}

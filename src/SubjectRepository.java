@@ -6,10 +6,18 @@ import java.util.Iterator;
 public class SubjectRepository implements Serializable {
 
 	private ArrayList<Subject> subjectsArrayList;
+	private static SubjectRepository instance;
 
 	public SubjectRepository() {
 		subjectsArrayList = new ArrayList<>();
 	}
+	
+    public static SubjectRepository getInstance() {
+        if (instance == null) {
+            instance = new SubjectRepository();
+        }
+        return instance;
+    }
 
 	public ArrayList<Subject> getSubjects() {
 		return this.subjectsArrayList;

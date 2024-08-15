@@ -4,18 +4,49 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.sql.SQLException;
 import java.util.InputMismatchException;
 import java.util.Iterator;
 import java.util.Scanner;
 
-public class UserInteraction {
+public class UserInteraction implements Observer {
+
+	private static UserInteraction instance;
 
 	private Scanner input = new Scanner(System.in);
 	private int subIn = 0;
-	private SubjectRepository subjectRep = new SubjectRepository();
+	SubjectRepository subjectRep = SubjectRepository.getInstance();
+	Database db = new Database();
 
-	public UserInteraction() throws FileNotFoundException, ClassNotFoundException, IOException {
-		//this.subjectRep = readDataFromBinaryFile();
+	public UserInteraction() throws FileNotFoundException, ClassNotFoundException, IOException, SQLException {
+		/*try {
+			this.subjectRep = readDataFromBinaryFile();
+		} catch (FileNotFoundException e) {
+			System.out.println("File \"Data.dat\" not found, creating new subject repository...");
+			this.subjectRep = new SubjectRepository();
+		} catch (IOException e) {
+			System.out.println("Error reading from file \"Data.dat\", creating new subject repository...");
+			this.subjectRep = new SubjectRepository();
+		} catch (ClassNotFoundException e) {
+			System.out.println("Error reading from file \"Data.dat\", creating new subject repository...");
+			this.subjectRep = new SubjectRepository();
+		}*/
+		try {
+			db.startConnection();
+			db.createTables();
+			db.closeConnection();
+			//db.insertData();
+			//db.readData();
+		} catch (SQLException e) {
+			System.out.println("Error connecting to database");
+		}
+	}
+
+	public static UserInteraction getInstance() throws FileNotFoundException, ClassNotFoundException, IOException, SQLException {
+		if (instance == null) {
+			instance = new UserInteraction();
+		}
+		return instance;
 	}
 
 	public int getSubIn() {
@@ -88,13 +119,14 @@ public class UserInteraction {
 
 	public Question addQuestionWithSpecificAnswersToTheTest(int questionNumber) {
 		Question tmpQuestion = getSubject().getStock().getQuestion(questionNumber);
-		Question newQuestion = new ClosedQuestion(tmpQuestion.getQuestionText(), tmpQuestion.getDifficulty());
+		Question newQuestion = QuestionFactory.getType(eQuestionType.Closed, tmpQuestion.getQuestionText(),
+				tmpQuestion.getDifficulty());
 		char yesOrNo;
 		do {
 			System.out.println("Which answer you want to pick? (pick answer number)");
 			System.out.println(((ClosedQuestion) tmpQuestion).toString());
 			int answerNumber = input.nextInt();
-			Answer answer = ((ClosedQuestion) tmpQuestion).getAnswer(answerNumber);
+			AdapterAnswer answer = ((ClosedQuestion) tmpQuestion).getAnswer(answerNumber);
 			((ClosedQuestion) tmpQuestion).deleteAnswer(answer);
 			((ClosedQuestion) newQuestion).addAnswer(answer);
 			System.out.println("Do you want to add 1 more answer? (y/n)");
@@ -117,14 +149,14 @@ public class UserInteraction {
 		}
 		if (count >= 2) {
 			((ClosedQuestion) newQuestion)
-					.addAnswer(new Answer(new AnswerText("More then one answer is correct"), true));
+					.addAnswer(new AdapterAnswer(new AnswerText("More then one answer is correct"), true));
 		} else
 			((ClosedQuestion) newQuestion)
-					.addAnswer(new Answer(new AnswerText("More then one answer is correct"), false));
+					.addAnswer(new AdapterAnswer(new AnswerText("More then one answer is correct"), false));
 		if (count == 0)
-			((ClosedQuestion) newQuestion).addAnswer(new Answer(new AnswerText("No answer is correct"), true));
+			((ClosedQuestion) newQuestion).addAnswer(new AdapterAnswer(new AnswerText("No answer is correct"), true));
 		else
-			((ClosedQuestion) newQuestion).addAnswer(new Answer(new AnswerText("No answer is correct"), false));
+			((ClosedQuestion) newQuestion).addAnswer(new AdapterAnswer(new AnswerText("No answer is correct"), false));
 		return newQuestion;
 	}
 
@@ -141,7 +173,7 @@ public class UserInteraction {
 		if (question instanceof ClosedQuestion) {
 			System.out.println(question.toString());
 			int selectedAnswerFromQuestion;
-			Answer answer;
+			AdapterAnswer answer;
 			do {
 				selectedAnswerFromQuestion = input.nextInt();
 				answer = ((ClosedQuestion) question).getAnswer(selectedAnswerFromQuestion);
@@ -154,7 +186,7 @@ public class UserInteraction {
 			return false;
 	}
 
-	public void addQuestionToData(int qType) {
+	public void addQuestionToData(eQuestionType qType) {
 		String questionText;
 		System.out.println("Whats the question?");
 		do {
@@ -173,15 +205,16 @@ public class UserInteraction {
 			if (!(qDifficulty.equals("Hard")) && !(qDifficulty.equals("Medium")) && !(qDifficulty.equals("Easy")))
 				System.out.println("Wrong input!");
 		} while (!(qDifficulty.equals("Hard")) && !(qDifficulty.equals("Medium")) && !(qDifficulty.equals("Easy")));
-		if (qType == 4)
-			addClosedQuestionToData(questionText, eDifficulty.valueOf(qDifficulty));
-		else if (qType == 5)
-			addOpenQuestionToData(questionText, eDifficulty.valueOf(qDifficulty));
+		Question question = QuestionFactory.getType(qType, questionText, eDifficulty.valueOf(qDifficulty));
+		if (question instanceof OpenQuestion) {
+			addOpenQuestionToData((OpenQuestion) question, questionText, eDifficulty.valueOf(qDifficulty));
+		} else if (question instanceof ClosedQuestion) {
+			addClosedQuestionToData((ClosedQuestion) question, questionText, eDifficulty.valueOf(qDifficulty));
+		}
 		System.out.println("Question added succesfuly to stock");
 	}
 
-	public void addClosedQuestionToData(String questionText, eDifficulty eDifficulty) {
-		ClosedQuestion closedQuestion = new ClosedQuestion(questionText, eDifficulty);
+	public void addClosedQuestionToData(ClosedQuestion closedQuestion, String questionText, eDifficulty eDifficulty) {
 		int answerKind;
 		char ch;
 		do {
@@ -203,9 +236,9 @@ public class UserInteraction {
 						System.out.println("Wrong input!");
 				} while (!(ch == 't') && !(ch == 'f'));
 				if ((ch == 't'))
-					closedQuestion.addAnswer(new Answer(answertext, true));
+					closedQuestion.addAnswer(new AdapterAnswer(answertext, true));
 				else if (((ch == 'f')))
-					closedQuestion.addAnswer(new Answer(answertext, false));
+					closedQuestion.addAnswer(new AdapterAnswer(answertext, false));
 			} else if (answerKind == 2) {
 				AnswerText temp = null;
 				temp = addAnswerToData();
@@ -216,9 +249,9 @@ public class UserInteraction {
 						System.out.println("Wrong input!");
 				} while (!(ch == 't') && !(ch == 'f'));
 				if ((ch == 't'))
-					closedQuestion.addAnswer(new Answer(temp, true));
+					closedQuestion.addAnswer(new AdapterAnswer(temp, true));
 				else if (((ch == 'f')))
-					closedQuestion.addAnswer(new Answer(temp, false));
+					closedQuestion.addAnswer(new AdapterAnswer(temp, false));
 			}
 			do {
 				System.out.println("If you want to add another answer press 'c' to continiue");
@@ -237,7 +270,7 @@ public class UserInteraction {
 		} while (ch == 'c');
 	}
 
-	public void addOpenQuestionToData(String questionText, eDifficulty eDifficulty) {
+	public void addOpenQuestionToData(OpenQuestion openQuestion, String questionText, eDifficulty eDifficulty) {
 		int answerKind;
 		System.out.println("If you want to add answer from stock press 1");
 		System.out.println("If you want to add a new answer by urself press 2");
@@ -250,20 +283,17 @@ public class UserInteraction {
 			System.out.println("Which answer from stock you want to add? (pick answer number)");
 			showAnswersInStock();
 			AnswerText answertext = selectAnswerFromStock();
-			try {
-				getSubject().getStock().addQuestionToStock(new OpenQuestion(questionText, eDifficulty, answertext));
-			} catch (ClosedQuestionLessThen4AnswersException e) {
-				e.printStackTrace();
-			}
+			openQuestion.setAnswer(answertext);
 		} else if (answerKind == 2) {
 			String answerText;
 			AnswerText temp = null;
 			temp = addAnswerToData();
-			try {
-				getSubject().getStock().addQuestionToStock(new OpenQuestion(questionText, eDifficulty, temp));
-			} catch (ClosedQuestionLessThen4AnswersException e) {
-				e.printStackTrace();
-			}
+			openQuestion.setAnswer(temp);
+		}
+		try {
+			getSubject().getStock().addQuestionToStock(openQuestion);
+		} catch (ClosedQuestionLessThen4AnswersException e) {
+			System.out.println(e.getMessage());
 		}
 	}
 
@@ -306,9 +336,11 @@ public class UserInteraction {
 				System.out.println("Wrong input!");
 		} while (!(ch == 't') && !(ch == 'f'));
 		if ((ch == 't'))
-			getSubject().getStock().addAnswerToSpesificQuestion(new Answer(selectedAnswer, true), selectedQuestion);
+			getSubject().getStock().addAnswerToSpesificQuestion(new AdapterAnswer(selectedAnswer, true),
+					selectedQuestion);
 		else if (((ch == 'f')))
-			getSubject().getStock().addAnswerToSpesificQuestion(new Answer(selectedAnswer, false), selectedQuestion);
+			getSubject().getStock().addAnswerToSpesificQuestion(new AdapterAnswer(selectedAnswer, false),
+					selectedQuestion);
 	}
 
 	public void showQuestionsInStock() {
@@ -404,6 +436,11 @@ public class UserInteraction {
 			questionNumber = selectQuestionFromStock();
 			deleteQuestionFromStock(questionNumber);
 		}
+	}
+	
+	@Override
+	public void update(MenuActionCompleteListener m) {
+		System.out.println("Observer said: " + m.getActionType() + " had ran successfully!");
 	}
 
 }

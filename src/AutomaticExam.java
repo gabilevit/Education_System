@@ -51,8 +51,8 @@ public class AutomaticExam implements Examable {
 		for (int i = 0; i < this.numOfQuestions; i++) {
 			int randomQuestion = rand.nextInt(questionsDB.size());
 			if (questionsDB.get(randomQuestion) instanceof ClosedQuestion) {
-				ArrayList<Answer> answers = new ArrayList<Answer>(0);
-				Iterator<Answer> it2 = ((ClosedQuestion) questionsDB.get(randomQuestion)).getAnswers().iterator();
+				ArrayList<AdapterAnswer> answers = new ArrayList<AdapterAnswer>(0);
+				Iterator<AdapterAnswer> it2 = ((ClosedQuestion) questionsDB.get(randomQuestion)).getAnswers().iterator();
 				while (it2.hasNext()) {
 					answers.add(it2.next());
 				}
@@ -60,7 +60,7 @@ public class AutomaticExam implements Examable {
 				int falseAnswersCount = 0;
 				for (int j = 0; j < 4; j++) {
 					int randomAnswer = rand.nextInt(answers.size());
-					Answer answer = ((ClosedQuestion) questionsDB.get(randomQuestion)).getAnswer(randomAnswer + 1);
+					AdapterAnswer answer = ((ClosedQuestion) questionsDB.get(randomQuestion)).getAnswer(randomAnswer + 1);
 					if (!answer.getIsCorrect()) {
 						falseAnswersCount++;
 					}
@@ -68,10 +68,10 @@ public class AutomaticExam implements Examable {
 					answers.remove(randomAnswer);
 				}
 				if (falseAnswersCount == 4) {
-					autoExam.addAnswerToSpesificQuestion(new Answer(new AnswerText("No answer is correct"), true),
+					autoExam.addAnswerToSpesificQuestion(new AdapterAnswer(new AnswerText("No answer is correct"), true),
 							randomQuestion);
 				} else
-					autoExam.addAnswerToSpesificQuestion(new Answer(new AnswerText("No answer is correct"), false),
+					autoExam.addAnswerToSpesificQuestion(new AdapterAnswer(new AnswerText("No answer is correct"), false),
 							randomQuestion);
 				try {
 					autoExam.addQuestionToStock(questionsDB.get(randomQuestion));

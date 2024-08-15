@@ -1,6 +1,40 @@
 Gabi Levit 207612417
 Omer Aley-Raz
 
+------------------- Part 3 -------------------
+
+FACADE:
+In part 2, we created a UserInteraction class in order to centralize and separate between the users interaction at the high level classes and the system itself at the low level classes, this acts as a FACADE between the user and the internalized system.
+
+FACTORY:
+OpenQuestion and ClosedQuestion are the only classes that inherits from a parent class Question, so we converted it to a Factory.
+In order to do that we created an enum eQuestionType to hold the required question type when using the factory and QuestionFactory, which is the factory itself.
+also, we changed every function that created questions to use the factory instead of new.
+
+SINGLETON:
+In our project, there are two classes that require one and only one instance: the FACADE UserInteractions and the SubjectRepository.
+In both of them, we added an instance and getInstance function at the top near the constructors, as well as changing all "new" calls for them in the project to "getInstance" calls.
+
+COMMAND:
+Functions converted to Command: showData, addAnswerToData, addQuestionToData (both open and closed questions).
+This was done by creating the Command interface, as wall as the classes ShowDataCommand, AddAnswerToDataCommand and AddQuestionToDataCommand.
+
+OBSERVER:
+Added Observer interface as long with MenuActionCompleteListener.
+In main, the observer latches onto the UserInteraction and every time one of the listed menu actions is completed, it notifies the observer and prints the function with the correct message.
+update function is in the bottom of UserInteractions.
+
+ADAPTER:
+We chose to implement Adapter to class Answer, which has 7 methods within it.
+we added "hw3_" before Answer as required and then we added adapter class AdapterAnswer.
+the only change we had to do inside the other classes is only to change every instance of "Answer" to be of instance "AdapterAnswer" in order to implement the adapter into the system.
+
+Technically, running the program, selecting/creating a subject and adding answer to the subject(2) uses all parts of this assignment.
+
+
+
+
+
 ------------------- Part 2 -------------------
 
 
