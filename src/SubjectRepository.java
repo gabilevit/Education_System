@@ -60,7 +60,11 @@ public class SubjectRepository implements Serializable {
 		return false;
 	}
 
-	public boolean deleteSubject(Subject subject) {
+	public boolean deleteSubject(Subject subject, Database db) throws SQLException {
+		db.startConnection();
+
+		db.deleteFromSubjectTable(subject.getName().toString());
+		db.closeConnection();
 		return this.subjectsArrayList.remove(subject);
 	}
 

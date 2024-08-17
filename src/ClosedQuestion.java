@@ -1,3 +1,4 @@
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class ClosedQuestion extends Question {
@@ -37,7 +38,12 @@ public class ClosedQuestion extends Question {
 		return this.answers.get(id - 1);
 	}
 
-	public void deleteAnswer(AdapterAnswer answer) {
+	public void deleteAnswer(AdapterAnswer answer, Database db) throws SQLException {
+		db.startConnection();
+		db.deleteFromAdapterAnswer_ClosedQuestionTable(answer.getIsCorrect(), answer.getAnswerText().toString(),
+				this.getQuestionText());
+		db.deleteFromAdapterAnswerTable(answer.getAnswerText().toString());
+		db.closeConnection();
 		answers.remove(answer);
 	}
 

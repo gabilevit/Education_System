@@ -271,5 +271,90 @@ public class Database {
         }
     }
 
+    public boolean deleteFromSubjectTable(String name) throws SQLException {
+        try {
+            stmt = con.createStatement();
+            String q = "DELETE FROM Subject WHERE Name = '"+name+"';";
+            stmt.executeUpdate(q.toString());
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteFromAnswerTextTable(String answerText) throws SQLException {
+        try {
+            stmt = con.createStatement();
+            String q = "DELETE FROM AnswerText WHERE AnswerText = '"+answerText+"';";
+            stmt.executeUpdate(q.toString());
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteFromQuestionTable(String text) throws SQLException {
+        try {
+            stmt = con.createStatement();
+            String q = "DELETE FROM Question WHERE Text = '"+text+"';";
+            stmt.executeUpdate(q.toString());
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteFromOpenQuestionTable(String questionText) throws SQLException {
+        try {
+            stmt = con.createStatement();
+            String q = "DELETE FROM OpenQuestion WHERE QuestionID = "+getQuestionID(questionText)+";";
+            stmt.executeUpdate(q.toString());
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteFromClosedQuestionTable(String questionText) throws SQLException {
+        try {
+            stmt = con.createStatement();
+            String q = "DELETE FROM ClosedQuestion WHERE QuestionID = "+getQuestionID(questionText)+";";
+            stmt.executeUpdate(q.toString());
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteFromAdapterAnswerTable(String answerText) throws SQLException {
+        try {
+            stmt = con.createStatement();
+            String q = "DELETE FROM AdapterAnswer WHERE AnswerTextID = "+getAnswerTextID(answerText)+";";
+            stmt.executeUpdate(q.toString());
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteFromAdapterAnswer_ClosedQuestionTable(boolean isCorrect, String adapterAnswerText, String questionText) throws SQLException {
+        try {
+            stmt = con.createStatement();
+            String q = "DELETE FROM AdapterAnswer_ClosedQuestion WHERE AdapterAnswerID = "+getAdapterAnswerID(isCorrect, getAnswerTextID(adapterAnswerText))+" AND ClosedQID = "+getClosedQuestionID(getQuestionID(questionText))+";";
+            stmt.executeUpdate(q.toString());
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
 
 }

@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -87,7 +88,23 @@ public class Repository implements Serializable {
 		return false;
 	}
 
-	public boolean deleteQuestionFromStock(Question question) {
+	public boolean deleteQuestionFromStock(Question question, Database db) throws SQLException {
+		if (question instanceof ClosedQuestion) {
+			db.startConnection();
+			for (int i = 0; i < ((ClosedQuestion) question).getAnswers().size(); i++) {
+				db.deleteFromAdapterAnswer_ClosedQuestionTable(((ClosedQuestion) question).getAnswers().get(i).getIsCorrect() ,((ClosedQuestion) question).getAnswers().get(i).getAnswerText().toString(),
+						question.getQuestionText());
+				db.deleteFromAdapterAnswerTable(((ClosedQuestion) question).getAnswers().get(i).getAnswerText().toString());
+			}
+			db.deleteFromClosedQuestionTable(question.getQuestionText());
+			db.deleteFromQuestionTable(question.getQuestionText());
+			db.closeConnection();
+		} else {
+			db.startConnection();
+			db.deleteFromOpenQuestionTable(question.getQuestionText());
+			db.deleteFromQuestionTable(question.getQuestionText());
+			db.closeConnection();
+		}
 		return this.questionsDB.remove(question);
 	}
 

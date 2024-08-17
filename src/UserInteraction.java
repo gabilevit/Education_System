@@ -103,6 +103,23 @@ public class UserInteraction implements Observer {
 		System.out.println("Subject added succesfuly to stock");
 	}
 
+	public void deleteSubjectFromData() throws SQLException {
+		int selectedSubject;
+		if (this.subjectRep.getSubjects().size() == 0) {
+			System.out.println("There are no subjects in the database");
+		} else {
+			showSubjectsInStock();
+			System.out.println("Which subject from stock you wish to delete? (pick subject number)");
+			do {
+				selectedSubject = input.nextInt();
+				if (!this.subjectRep.findSubject(selectedSubject))
+					System.out.println("Wrong input!");
+			} while (!this.subjectRep.findSubject(selectedSubject));
+			this.subjectRep.deleteSubject(this.subjectRep.getSubject(selectedSubject), db);
+			System.out.println("Subject deleted succefuly");
+		}
+	}
+
 	public int selectSubjectFromStock() throws InputMismatchException {
 		int selectedSubject = -1;
 		do {
@@ -117,7 +134,7 @@ public class UserInteraction implements Observer {
 		return selectedSubject;
 	}
 
-	public Question addQuestionWithSpecificAnswersToTheTest(int questionNumber) {
+	public Question addQuestionWithSpecificAnswersToTheTest(int questionNumber) throws SQLException {
 		Question tmpQuestion = getSubject().getStock().getQuestion(questionNumber);
 		Question newQuestion = QuestionFactory.getType(eQuestionType.Closed, tmpQuestion.getQuestionText(),
 				tmpQuestion.getDifficulty());
@@ -127,7 +144,7 @@ public class UserInteraction implements Observer {
 			System.out.println(((ClosedQuestion) tmpQuestion).toString());
 			int answerNumber = input.nextInt();
 			AdapterAnswer answer = ((ClosedQuestion) tmpQuestion).getAnswer(answerNumber);
-			((ClosedQuestion) tmpQuestion).deleteAnswer(answer);
+			((ClosedQuestion) tmpQuestion).deleteAnswer(answer, db);
 			((ClosedQuestion) newQuestion).addAnswer(answer);
 			System.out.println("Do you want to add 1 more answer? (y/n)");
 			yesOrNo = input.next().charAt(0);
@@ -160,15 +177,15 @@ public class UserInteraction implements Observer {
 		return newQuestion;
 	}
 
-	public void deleteQuestionFromStock(int questionNumber) {
+	public void deleteQuestionFromStock(int questionNumber) throws SQLException {
 		Question question = getSubject().getStock().getQuestion(questionNumber);
-		if (getSubject().getStock().deleteQuestionFromStock(question))
+		if (getSubject().getStock().deleteQuestionFromStock(question, db))
 			System.out.println("Succes");
 		else
 			System.out.println("NOT succes");
 	}
 
-	public boolean deleteAnswerFromSpesificQuestion(int selectedQuestion) {
+	public boolean deleteAnswerFromSpesificQuestion(int selectedQuestion) throws SQLException {
 		Question question = getSubject().getStock().getQuestion(selectedQuestion);
 		if (question instanceof ClosedQuestion) {
 			System.out.println(question.toString());
@@ -180,7 +197,7 @@ public class UserInteraction implements Observer {
 				if (answer == null)
 					System.out.println("Wrong input!");
 			} while (answer == null);
-			((ClosedQuestion) question).deleteAnswer(answer);
+			((ClosedQuestion) question).deleteAnswer(answer, db);
 			return true;
 		} else
 			return false;
@@ -214,6 +231,7 @@ public class UserInteraction implements Observer {
 		} else if (question instanceof ClosedQuestion) {
 			db.startConnection();
 			db.insertToQuestionTable(questionText, qDifficulty, question.getId(), getSubject().getName());
+			db.insertToClosedQuestionTable(questionText);
 			db.closeConnection();
 			addClosedQuestionToData((ClosedQuestion) question, questionText, eDifficulty.valueOf(qDifficulty));
 		}
@@ -241,15 +259,17 @@ public class UserInteraction implements Observer {
 					if (!(ch == 't') && !(ch == 'f'))
 						System.out.println("Wrong input!");
 				} while (!(ch == 't') && !(ch == 'f'));
-				if ((ch == 't')){
+				if (ch == 't'){
 					db.startConnection();
 					db.insertToAdapterAnswerTable(true, answertext.toString());
+					db.insertToAdapterAnswer_ClosedQuestionTable(true, answertext.toString(), questionText);
 					db.closeConnection();
 					closedQuestion.addAnswer(new AdapterAnswer(answertext, true));
 				}
-				else if (((ch == 'f'))){
+				else if (ch == 'f'){
 					db.startConnection();
 					db.insertToAdapterAnswerTable(false, answertext.toString());
+					db.insertToAdapterAnswer_ClosedQuestionTable(false, answertext.toString(), questionText);
 					db.closeConnection();
 					closedQuestion.addAnswer(new AdapterAnswer(answertext, false));
 				}
@@ -262,10 +282,20 @@ public class UserInteraction implements Observer {
 					if (!(ch == 't') && !(ch == 'f'))
 						System.out.println("Wrong input!");
 				} while (!(ch == 't') && !(ch == 'f'));
-				if ((ch == 't'))
+				if (ch == 't'){
+					db.startConnection();
+					db.insertToAdapterAnswerTable(true, temp.toString());
+					db.insertToAdapterAnswer_ClosedQuestionTable(true, temp.toString(), questionText);
+					db.closeConnection();
 					closedQuestion.addAnswer(new AdapterAnswer(temp, true));
-				else if (((ch == 'f')))
+				}
+				else if (ch == 'f'){
+					db.startConnection();
+					db.insertToAdapterAnswerTable(false, temp.toString());
+					db.insertToAdapterAnswer_ClosedQuestionTable(false, temp.toString(), questionText);
+					db.closeConnection();
 					closedQuestion.addAnswer(new AdapterAnswer(temp, false));
+				}
 			}
 			do {
 				System.out.println("If you want to add another answer press 'c' to continiue");
@@ -282,9 +312,6 @@ public class UserInteraction implements Observer {
 					ch = 'c';
 				}
 		} while (ch == 'c');
-		db.startConnection();
-		db.insertToClosedQuestionTable(questionText);
-		db.closeConnection();
 	}
 
 	public void addOpenQuestionToData(OpenQuestion openQuestion, String questionText, eDifficulty eDifficulty) throws SQLException {
@@ -427,7 +454,7 @@ public class UserInteraction implements Observer {
 		}
 	}
 
-	public void deleteAnswerFromSpecificQuestion() {
+	public void deleteAnswerFromSpecificQuestion() throws SQLException {
 		int questionNumber = 0;
 		int counter = 0;
 		Iterator<Question> it1 = subjectRep.getSubject(subIn).getStock().getQuestionsDB().iterator();
@@ -449,7 +476,7 @@ public class UserInteraction implements Observer {
 		}
 	}
 
-	public void deleteQuestionFromStock() {
+	public void deleteQuestionFromStock() throws SQLException {
 		int questionNumber = 0;
 		if (subjectRep.getSubject(subIn).getStock().getQuestionsDB().size() == 0) {
 			System.out.println("There are no questions in the database");
