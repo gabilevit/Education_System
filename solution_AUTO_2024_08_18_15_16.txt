@@ -1,0 +1,11 @@
+THE TEST (with solution):
+THE TEST:
+1) What is in east asia?
+Answers:Germany-false
+USA-false
+japan-true
+Russia-false
+
+2) What contry loves vodka?
+Answers:The correct answer is: Russia
+

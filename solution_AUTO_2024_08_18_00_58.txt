@@ -1,0 +1,11 @@
+THE TEST (with solution):
+THE TEST:
+1) Who produce milk?
+Answers:The correct answer is: Cow
+
+2) Who does meow?
+Answers:Dog-false
+Cat-true
+Cow-false
+Aligator-false
+

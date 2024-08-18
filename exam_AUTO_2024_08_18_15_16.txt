@@ -1,0 +1,15 @@
+THE TEST:
+[CLOSED QUESTION] -->1).What is in east asia?
+Question SERIAL NUMBER: 5
+Difficulty: Hard
+
+	1).Germany
+	2).USA
+	3).japan
+	4).Russia
+
+[OPEN QUESTION] -->2).What contry loves vodka?
+Question SERIAL NUMBER: 6
+Difficulty: Easy
+
+

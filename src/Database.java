@@ -3,6 +3,7 @@ import org.w3c.dom.CDATASection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 
 public class Database {
@@ -411,7 +412,9 @@ public class Database {
                     String q4 = "SELECT AnswerText FROM AnswerText WHERE AnswerTextID = "+rs3.getInt("AnswerTextID")+";";
                     ResultSet rs4 = stmt.executeQuery(q4.toString());
                     OpenQuestion openQuestion = new OpenQuestion(questionText, eDifficulty.valueOf(rs.getString("Difficulty")));
-                    openQuestion.setAnswer(new AnswerText(rs4.getString("AnswerText")));
+                    if(rs4.next()){
+                        openQuestion.setAnswer(new AnswerText(rs4.getString("AnswerText")));
+                    }
                     questions.add(openQuestion);
                 } else {
                     stmt = con.createStatement();
@@ -426,7 +429,9 @@ public class Database {
                             stmt = con.createStatement();
                             String q7 = "SELECT AnswerText FROM AnswerText WHERE AnswerTextID = "+rs6.getInt("AnswerTextID")+";";
                             ResultSet rs7 = stmt.executeQuery(q7.toString());
-                            closedQuestion.addAnswer(new AdapterAnswer(new AnswerText(rs7.getString("AnswerText")), rs6.getBoolean("IsCorrect")));
+                            if (rs7.next()) {
+                                closedQuestion.addAnswer(new AdapterAnswer(new AnswerText(rs7.getString("AnswerText")), rs6.getBoolean("IsCorrect")));
+                            }
                         }
                         questions.add(closedQuestion);
                     }
@@ -463,9 +468,14 @@ public class Database {
             rs = stmt.executeQuery(q.toString());
             while (rs.next()) {
                 Subject subject = new Subject(rs.getString("Name"));
+                //subject.getStock().setQuestionsDB(getQuestions(subject.getName()));
+                //subject.getStock().setAnswersText(getAnswersText(subject.getName()));
+                subjects.add(subject);
+                
+            }
+            for (Subject subject : subjects) {
                 subject.getStock().setQuestionsDB(getQuestions(subject.getName()));
                 subject.getStock().setAnswersText(getAnswersText(subject.getName()));
-                subjects.add(subject);
             }
             return subjects;
         } catch (SQLException e) {

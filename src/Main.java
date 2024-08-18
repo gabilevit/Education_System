@@ -73,7 +73,7 @@ public class Main {
 				user.deleteAllSubjectsFromData();
 				break;
 			case 0:
-				user.saveDataToBinaryFile();
+				//user.saveDataToBinaryFile();
 				System.out.println("Bye bye");
 				break;
 			default:

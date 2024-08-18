@@ -1,0 +1,15 @@
+THE TEST:
+[OPEN QUESTION] -->1).Who produce milk?
+Question SERIAL NUMBER: 6
+Difficulty: Hard
+
+
+[CLOSED QUESTION] -->2).Who does meow?
+Question SERIAL NUMBER: 3
+Difficulty: Easy
+
+	1).Dog
+	2).Cat
+	3).Cow
+	4).Aligator
+
