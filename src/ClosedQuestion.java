@@ -40,8 +40,8 @@ public class ClosedQuestion extends Question {
 
 	public void deleteAnswer(AdapterAnswer answer, Database db) throws SQLException {
 		db.startConnection();
-		db.deleteFromAdapterAnswer_ClosedQuestionTable(answer.getIsCorrect(), answer.getAnswerText().toString(),
-				this.getQuestionText());
+		//db.deleteFromAdapterAnswer_ClosedQuestionTable(answer.getAnswerText().toString(),
+		//		this.getQuestionText());
 		db.deleteFromAdapterAnswerTable(answer.getAnswerText().toString());
 		db.closeConnection();
 		answers.remove(answer);

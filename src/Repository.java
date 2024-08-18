@@ -92,8 +92,8 @@ public class Repository implements Serializable {
 		if (question instanceof ClosedQuestion) {
 			db.startConnection();
 			for (int i = 0; i < ((ClosedQuestion) question).getAnswers().size(); i++) {
-				db.deleteFromAdapterAnswer_ClosedQuestionTable(((ClosedQuestion) question).getAnswers().get(i).getIsCorrect() ,((ClosedQuestion) question).getAnswers().get(i).getAnswerText().toString(),
-						question.getQuestionText());
+				//db.deleteFromAdapterAnswer_ClosedQuestionTable(((ClosedQuestion) question).getAnswers().get(i).getIsCorrect() ,((ClosedQuestion) question).getAnswers().get(i).getAnswerText().toString(),
+						//question.getQuestionText());
 				db.deleteFromAdapterAnswerTable(((ClosedQuestion) question).getAnswers().get(i).getAnswerText().toString());
 			}
 			db.deleteFromClosedQuestionTable(question.getQuestionText());
@@ -106,6 +106,13 @@ public class Repository implements Serializable {
 			db.closeConnection();
 		}
 		return this.questionsDB.remove(question);
+	}
+
+	public boolean deleteAnswerFromStock(AnswerText answer, Database db) throws SQLException {
+		db.startConnection();
+		db.deleteFromAnswerTextTable(answer.toString());
+		db.closeConnection();
+		return this.answersTextDB.remove(answer);
 	}
 
 	public String toStringAnswersInStock() {

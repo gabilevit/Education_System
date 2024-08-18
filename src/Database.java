@@ -1,6 +1,9 @@
 import org.w3c.dom.CDATASection;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 public class Database {
     private static Database instance;
@@ -31,7 +34,7 @@ public class Database {
         createTable("OpenQuestion");
         createTable("ClosedQuestion");
         createTable("AdapterAnswer");
-        createTable("AdapterAnswer_ClosedQuestion");
+        //createTable("AdapterAnswer_ClosedQuestion");
     }
 
     public void createTable(String tableName) throws SQLException {
@@ -58,7 +61,7 @@ public class Database {
             case "OpenQuestion":
                 query.append("OpenQID SERIAL PRIMARY KEY,\n");
                 query.append("QuestionID INT NOT NULL,\n");
-                query.append("AnswerTextID INT,\n");
+                query.append("AnswerTextID INT NOT NULL,\n");
                 query.append("FOREIGN KEY (QuestionID) REFERENCES Question(QuestionID),\n");
                 query.append("FOREIGN KEY (AnswerTextID) REFERENCES AnswerText(AnswerTextID)\n");
                 query.append(");");
@@ -72,20 +75,42 @@ public class Database {
                 query.append("AdapterAnswerID SERIAL PRIMARY KEY,\n");
                 query.append("IsCorrect BOOLEAN NOT NULL,\n");
                 query.append("AnswerTextID INT NOT NULL,\n");
-                query.append("FOREIGN KEY (AnswerTextID) REFERENCES AnswerText(AnswerTextID)\n");
+                query.append("ClosedQID INT NOT NULL,\n");
+                query.append("FOREIGN KEY (AnswerTextID) REFERENCES AnswerText(AnswerTextID),\n");
+                query.append("FOREIGN KEY (ClosedQID) REFERENCES ClosedQuestion(ClosedQID)\n");
                 query.append(");");
                 break;
-            case "AdapterAnswer_ClosedQuestion":
+            /*case "AdapterAnswer_ClosedQuestion":
                 query.append("AdapterAnswerID INT NOT NULL,\n");
                 query.append("ClosedQID INT NOT NULL,\n");
                 query.append("FOREIGN KEY (AdapterAnswerID) REFERENCES AdapterAnswer(AdapterAnswerID),\n");
                 query.append("FOREIGN KEY (ClosedQID) REFERENCES ClosedQuestion(ClosedQID)\n");
                 query.append(");");
-                break;
+                break;*/
         }
         try {
             stmt = con.createStatement();
             stmt.executeUpdate(query.toString());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void dropTables() throws SQLException {
+        dropTable("AdapterAnswer_ClosedQuestion");
+        dropTable("AdapterAnswer");
+        dropTable("ClosedQuestion");
+        dropTable("OpenQuestion");
+        dropTable("Question");
+        dropTable("AnswerText");
+        dropTable("Subject");
+    }
+
+    public void dropTable(String tableName) throws SQLException {
+        try {
+            stmt = con.createStatement();
+            String q = "DROP TABLE IF EXISTS "+tableName+";";
+            stmt.executeUpdate(q.toString());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -169,10 +194,10 @@ public class Database {
         }
     }
 
-    public boolean insertToAdapterAnswerTable(boolean isCorrect, String answerText) throws SQLException {
+    public boolean insertToAdapterAnswerTable(boolean isCorrect, String answerText, String questionText) throws SQLException {
         try {
             stmt = con.createStatement();
-            String q = "INSERT INTO AdapterAnswer (IsCorrect, AnswerTextID) VALUES ("+isCorrect+", "+getAnswerTextID(answerText)+");";
+            String q = "INSERT INTO AdapterAnswer (IsCorrect, AnswerTextID, ClosedQID) VALUES ("+isCorrect+", "+getAnswerTextID(answerText)+", "+getClosedQuestionID(getQuestionID(questionText))+");";
             stmt.executeUpdate(q.toString());
             return true;
         } catch (SQLException e) {
@@ -343,18 +368,109 @@ public class Database {
         }
     }
 
-    public boolean deleteFromAdapterAnswer_ClosedQuestionTable(boolean isCorrect, String adapterAnswerText, String questionText) throws SQLException {
+    public ArrayList<AdapterAnswer> getAdapterAnswers() throws SQLException {
+        ArrayList<AdapterAnswer> adapterAnswers = new ArrayList<>();
         try {
             stmt = con.createStatement();
-            String q = "DELETE FROM AdapterAnswer_ClosedQuestion WHERE AdapterAnswerID = "+getAdapterAnswerID(isCorrect, getAnswerTextID(adapterAnswerText))+" AND ClosedQID = "+getClosedQuestionID(getQuestionID(questionText))+";";
-            stmt.executeUpdate(q.toString());
-            return true;
+            String q = "SELECT * FROM AdapterAnswer;";
+            rs = stmt.executeQuery(q.toString());
+            while (rs.next()) {
+                int answerTextID = rs.getInt("AnswerTextID");
+                stmt = con.createStatement();
+                String q2 = "SELECT AnswerText FROM AnswerText WHERE AnswerTextID = "+answerTextID+";";
+                ResultSet rs2 = stmt.executeQuery(q2.toString());
+                adapterAnswers.add(new AdapterAnswer(new AnswerText(rs2.getString("AnswerText")), rs.getBoolean("IsCorrect")));
+            }
+            return adapterAnswers;
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
+            return null;
         }
     }
 
+    public HashSet<Question> getQuestions(String subjectName) throws SQLException {
+        HashSet<Question> questions = new HashSet<>();
+        try {
+            stmt = con.createStatement();
+            String q = "SELECT * FROM Question WHERE SubjectID = "+getSubjectID(subjectName)+";";
+            rs = stmt.executeQuery(q.toString());
+            while (rs.next()) {
+                int questionID = rs.getInt("QuestionID");
+                stmt = con.createStatement();
+                String q2 = "SELECT text FROM Question WHERE QuestionID = "+questionID+";";
+                ResultSet rs2 = stmt.executeQuery(q2.toString());
+                String questionText = null;
+                if (rs2.next()) {  // Move cursor to first row
+                    questionText = rs2.getString("Text");
+                }
+                stmt = con.createStatement();
+                String q3 = "SELECT * FROM OpenQuestion WHERE QuestionID = "+questionID+";";
+                ResultSet rs3 = stmt.executeQuery(q3.toString());
+                if (rs3.next()) {
+                    stmt = con.createStatement();
+                    String q4 = "SELECT AnswerText FROM AnswerText WHERE AnswerTextID = "+rs3.getInt("AnswerTextID")+";";
+                    ResultSet rs4 = stmt.executeQuery(q4.toString());
+                    OpenQuestion openQuestion = new OpenQuestion(questionText, eDifficulty.valueOf(rs.getString("Difficulty")));
+                    openQuestion.setAnswer(new AnswerText(rs4.getString("AnswerText")));
+                    questions.add(openQuestion);
+                } else {
+                    stmt = con.createStatement();
+                    String q5 = "SELECT * FROM ClosedQuestion WHERE QuestionID = "+questionID+";";
+                    ResultSet rs5 = stmt.executeQuery(q5.toString());
+                    if (rs5.next()) {
+                        ClosedQuestion closedQuestion = new ClosedQuestion(questionText, eDifficulty.valueOf(rs.getString("Difficulty")));
+                        stmt = con.createStatement();
+                        String q6 = "SELECT * FROM AdapterAnswer WHERE ClosedQID = "+rs5.getInt("ClosedQID")+";";
+                        ResultSet rs6 = stmt.executeQuery(q6.toString());
+                        while (rs6.next()) {
+                            stmt = con.createStatement();
+                            String q7 = "SELECT AnswerText FROM AnswerText WHERE AnswerTextID = "+rs6.getInt("AnswerTextID")+";";
+                            ResultSet rs7 = stmt.executeQuery(q7.toString());
+                            closedQuestion.addAnswer(new AdapterAnswer(new AnswerText(rs7.getString("AnswerText")), rs6.getBoolean("IsCorrect")));
+                        }
+                        questions.add(closedQuestion);
+                    }
+                }
+            }
+            return questions;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
+    public LinkedHashSet<AnswerText> getAnswersText(String subjectName) throws SQLException {
+        LinkedHashSet<AnswerText> answersText = new LinkedHashSet<>();
+        try {
+            stmt = con.createStatement();
+            String q = "SELECT * FROM AnswerText WHERE SubjectID = "+getSubjectID(subjectName)+";";
+            rs = stmt.executeQuery(q.toString());
+            while (rs.next()) {
+                answersText.add(new AnswerText(rs.getString("AnswerText")));
+            }
+            return answersText;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
+    public ArrayList<Subject> getSubjects() throws SQLException {
+        ArrayList<Subject> subjects = new ArrayList<>();
+        try {
+            stmt = con.createStatement();
+            String q = "SELECT * FROM Subject;";
+            rs = stmt.executeQuery(q.toString());
+            while (rs.next()) {
+                Subject subject = new Subject(rs.getString("Name"));
+                subject.getStock().setQuestionsDB(getQuestions(subject.getName()));
+                subject.getStock().setAnswersText(getAnswersText(subject.getName()));
+                subjects.add(subject);
+            }
+            return subjects;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

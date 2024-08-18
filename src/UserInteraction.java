@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Iterator;
 import java.util.Scanner;
@@ -34,6 +35,8 @@ public class UserInteraction implements Observer {
 		try {
 			db.startConnection();
 			db.createTables();
+			ArrayList<Subject> subjects = db.getSubjects();
+			this.subjectRep.setSubjects(subjects);
 			db.closeConnection();
 			//db.insertData();
 			//db.readData();
@@ -117,6 +120,15 @@ public class UserInteraction implements Observer {
 			} while (!this.subjectRep.findSubject(selectedSubject));
 			this.subjectRep.deleteSubject(this.subjectRep.getSubject(selectedSubject), db);
 			System.out.println("Subject deleted succefuly");
+		}
+	}
+
+	public void deleteAllSubjectsFromData() throws SQLException {
+		if (this.subjectRep.getSubjects().size() == 0) {
+			System.out.println("There are no subjects in the database");
+		} else {
+			this.subjectRep.deleteAllSubjects(db);
+			System.out.println("All subjects deleted succefuly");
 		}
 	}
 
@@ -261,15 +273,15 @@ public class UserInteraction implements Observer {
 				} while (!(ch == 't') && !(ch == 'f'));
 				if (ch == 't'){
 					db.startConnection();
-					db.insertToAdapterAnswerTable(true, answertext.toString());
-					db.insertToAdapterAnswer_ClosedQuestionTable(true, answertext.toString(), questionText);
+					db.insertToAdapterAnswerTable(true, answertext.toString(), closedQuestion.questionText);
+					//db.insertToAdapterAnswer_ClosedQuestionTable(true, answertext.toString(), questionText);
 					db.closeConnection();
 					closedQuestion.addAnswer(new AdapterAnswer(answertext, true));
 				}
 				else if (ch == 'f'){
 					db.startConnection();
-					db.insertToAdapterAnswerTable(false, answertext.toString());
-					db.insertToAdapterAnswer_ClosedQuestionTable(false, answertext.toString(), questionText);
+					db.insertToAdapterAnswerTable(false, answertext.toString(), closedQuestion.questionText);
+					//db.insertToAdapterAnswer_ClosedQuestionTable(false, answertext.toString(), questionText);
 					db.closeConnection();
 					closedQuestion.addAnswer(new AdapterAnswer(answertext, false));
 				}
@@ -284,15 +296,15 @@ public class UserInteraction implements Observer {
 				} while (!(ch == 't') && !(ch == 'f'));
 				if (ch == 't'){
 					db.startConnection();
-					db.insertToAdapterAnswerTable(true, temp.toString());
-					db.insertToAdapterAnswer_ClosedQuestionTable(true, temp.toString(), questionText);
+					db.insertToAdapterAnswerTable(true, temp.toString(), closedQuestion.questionText);
+					//db.insertToAdapterAnswer_ClosedQuestionTable(true, temp.toString(), questionText);
 					db.closeConnection();
 					closedQuestion.addAnswer(new AdapterAnswer(temp, true));
 				}
 				else if (ch == 'f'){
 					db.startConnection();
-					db.insertToAdapterAnswerTable(false, temp.toString());
-					db.insertToAdapterAnswer_ClosedQuestionTable(false, temp.toString(), questionText);
+					db.insertToAdapterAnswerTable(false, temp.toString(), closedQuestion.questionText);
+					//db.insertToAdapterAnswer_ClosedQuestionTable(false, temp.toString(), questionText);
 					db.closeConnection();
 					closedQuestion.addAnswer(new AdapterAnswer(temp, false));
 				}

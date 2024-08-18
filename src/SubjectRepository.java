@@ -2,6 +2,7 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 
 public class SubjectRepository implements Serializable {
@@ -61,11 +62,29 @@ public class SubjectRepository implements Serializable {
 	}
 
 	public boolean deleteSubject(Subject subject, Database db) throws SQLException {
-		db.startConnection();
+		Iterator<Question> it = new HashSet<Question>(subject.getStock().getQuestionsDB()).iterator();
+		Question temp = null;
+		while (it.hasNext()) {
+			temp = it.next();
+			subject.getStock().deleteQuestionFromStock(temp, db);
 
+		}
+		Iterator<AnswerText> it2 = new HashSet<AnswerText>(subject.getStock().getAnswersText()).iterator();
+		AnswerText temp2 = null;
+		while (it2.hasNext()) {
+			temp2 = it2.next();
+			subject.getStock().deleteAnswerFromStock(temp2, db);
+		}
+		db.startConnection();
 		db.deleteFromSubjectTable(subject.getName().toString());
 		db.closeConnection();
 		return this.subjectsArrayList.remove(subject);
+	}
+
+	public void deleteAllSubjects(Database db) throws SQLException {
+		db.startConnection();
+		db.dropTables();
+		db.closeConnection();
 	}
 
 	public String toStringSubjectsInStock() {

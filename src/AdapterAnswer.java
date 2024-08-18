@@ -1,39 +1,43 @@
 import java.io.Serializable;
 
 public class AdapterAnswer implements Serializable{
-	
-	private hw3_Answer Answer;
+
+	private AnswerText answer;
+	private boolean isCorrect;
 	
 	public AdapterAnswer(AnswerText answerText, boolean isCorrect){
-		this.Answer = new hw3_Answer(answerText, isCorrect);
+		setAnwser(answerText);
+		setIsCorrect(isCorrect);
 	}
 	
 	public AnswerText getAnswerText() {
-		return Answer.hw3_getAnswerText();
+		return this.answer;
 	}
 
 	public boolean getIsCorrect() {
-		return Answer.hw3_getIsCorrect();
+		return this.isCorrect;
 	}
 
 	public void setAnwser(AnswerText answer) {
-		Answer.hw3_setAnwser(answer);
+		this.answer = answer;
 	}
 
 	public void setIsCorrect(boolean isCorrect) {
-		Answer.hw3_getIsCorrect();
+		this.isCorrect = isCorrect;
 	}
 
 	public String toStringWithoutSolution() {
-		return Answer.hw3_toStringWithoutSolution();
+		return getAnswerText().toString();
 	}
 	
 	public String toString() {
-		return Answer.toString();
+		StringBuffer sb = new StringBuffer();
+		sb.append(getAnswerText() + "-" + getIsCorrect());
+		return sb.toString();
 	}
 
 	public boolean equals(Object o) {
-		return Answer.equals(o);
+		return (o != null && o instanceof AdapterAnswer && ((AdapterAnswer) o).getAnswerText().equals(this.answer));
 	}
 
 }

@@ -37,6 +37,7 @@ public class Main {
 			System.out.println("Press 1 to show the subjects and pick one");
 			System.out.println("Press 2 to add a subject");
 			System.out.println("Press 3 to delete a subject");
+			System.out.println("Press 4 to delete all subjects (WARNING: THIS WILL DELETE ALL DATA)");
 			System.out.println("Press 0 to exit and save the data");
 
 			try {
@@ -67,6 +68,9 @@ public class Main {
 				break;
 			case 3:
 				user.deleteSubjectFromData();
+				break;
+			case 4:
+				user.deleteAllSubjectsFromData();
 				break;
 			case 0:
 				user.saveDataToBinaryFile();
@@ -141,7 +145,7 @@ public class Main {
 					subjectMenu(user);
 					break;
 				case 0:
-					user.saveDataToBinaryFile();
+					//user.saveDataToBinaryFile();
 					System.out.println("Bye bye");
 					break;
 				}
